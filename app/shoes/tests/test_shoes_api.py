@@ -111,4 +111,65 @@ class PrivateShoesApiTests(TestCase):
         serializer = ShoeDetailSerializer(shoe)
         self.assertEqual(res.data, serializer.data)
 
+    def test_create_basic_shoe(self):
+        """Test creating a basic shoe"""
+
+        payload = {
+            'title' : 'UltraBoosts 2019',
+            'brand' : 'Adidas',
+            'price' : 150
+        }
+
+        res = self.client.post(SHOES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        shoe = Shoes.objects.get(id=res.data['id'])
+
+        for key in payload.keys():
+            self.assertEqual(payload[key], getattr(shoe, key))
+
+    def test_create_shoe_with_tags(self):
+        """Test creating a shoe with tags"""
+        tag1 = sample_tag(user=self.user, name='hightops')
+        tag2 = sample_tag(user=self.user, name='lowtops')
+        payload = {
+            'title' : 'lowtop-hightop hybrid',
+            'tags' : [tag1.id, tag2.id],
+            'brand' : 'weird brand',
+            'price' : '4000'
+        }
+
+        res = self.client.post(SHOES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        shoe = Shoes.objects.get(id=res.data['id'])
+        tags = shoe.tags.all()
+
+        self.assertEqual(tags.count(), 2)
+        self.assertIn(tag1, tags)
+        self.assertIn(tag2, tags)
+
+    def test_create_show_with_characteristics(self):
+        """Test creating shoe with characteristics"""
+
+        char1 = sample_characteristic(user =self.user, name='teal')
+        char2 = sample_characteristic(user=self.user, name='gum bottom')
+
+        payload = {
+            'title' : 'NMD 250',
+            'characteristics' : [char1.id, char2.id],
+            'brand' : 'Adidas',
+            'price' : '160'
+        }
+
+        res = self.client.post(SHOES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        shoe = Shoes.objects.get(id=res.data['id'])
+        characteristics = shoe.characteristics.all()
+
+        self.assertEqual(characteristics.count(), 2)
+        self.assertIn(char1, characteristics)
+        self.assertIn(char2, characteristics)
 

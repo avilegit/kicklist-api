@@ -59,3 +59,7 @@ class ShoeViewSet(viewsets.ModelViewSet):
             return serializers.ShoeDetailSerializer
         
         return self.serializer_class
+
+    def perform_create(self, serializer):
+        """Create a new shoe"""
+        serializer.save(user=self.request.user)
