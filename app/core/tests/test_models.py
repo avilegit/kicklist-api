@@ -63,3 +63,12 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(tag), tag.name)
+    
+    def test_characteristics_str(self):
+        """Test the characteristic string representation"""
+        characteristic = models.Characteristic.objects.create(
+            user = sample_user(),
+            name = 'suede'
+        )
+        
+        self.assertEqual(str(characteristic), characteristic.name)

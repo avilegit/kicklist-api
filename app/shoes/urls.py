@@ -5,6 +5,7 @@ from shoes import views
 
 router = DefaultRouter()
 router.register('tags', views.TagViewSet)
+router.register('characteristics', views.CharacteristicViewSet)
 
 app_name = 'shoes'
 
