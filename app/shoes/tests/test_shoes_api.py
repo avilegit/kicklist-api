@@ -5,11 +5,28 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Shoes
+from core.models import Shoes, Tag, Characteristic
 
-from shoes.serializers import ShoeSerializer
+from shoes.serializers import ShoeSerializer, ShoeDetailSerializer
 
 SHOES_URL = reverse('shoes:shoes-list')
+
+# api/shoe/shoes
+# api/shoe/shoes/id create this dynamically
+
+def detail_url(shoe_id):
+    """return shoe detail URL"""
+
+    #router will create the detail url
+    return reverse('shoes:shoes-detail', args=[shoe_id])
+
+def sample_tag(user, name='street wear'):
+    """Create and return a sample tag"""
+    return Tag.objects.create(user=user, name=name)
+
+def sample_characteristic(user, name='suede'):
+    """Create and return a sample characteristic"""
+    return Characteristic.objects.create(user=user, name=name)
 
 def sample_shoe(user, **params):
     """Create and return a sample shoe"""
@@ -80,3 +97,18 @@ class PrivateShoesApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data, serializer.data)
+
+    def test_view_shoe_detail(self):
+        """Test viewing a shoe detail"""
+
+        shoe = sample_shoe(user=self.user)
+        shoe.tags.add(sample_tag(user=self.user))
+        shoe.characteristics.add(sample_characteristic(user=self.user))
+
+        url = detail_url(shoe.id)
+        res = self.client.get(url)
+
+        serializer = ShoeDetailSerializer(shoe)
+        self.assertEqual(res.data, serializer.data)
+
+

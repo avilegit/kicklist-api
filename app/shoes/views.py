@@ -53,3 +53,9 @@ class ShoeViewSet(viewsets.ModelViewSet):
         """Retrieve the shoes for the authenticated user"""
         return self.queryset.filter(user=self.request.user)
          
+    def get_serializer_class(self):
+        """Return approrpiate serializer class"""
+        if self.action == 'retrieve':
+            return serializers.ShoeDetailSerializer
+        
+        return self.serializer_class
