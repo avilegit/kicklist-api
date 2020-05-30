@@ -60,3 +60,21 @@ class Characteristic(models.Model):
 
     def __str__(self):
         return self.name
+
+class Shoes(models.Model):
+    """Shoes object"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete = models.CASCADE,
+    )
+
+    title   = models.CharField(max_length=255)
+    brand   = models.CharField(max_length=255)
+    price   = models.DecimalField(max_digits=6, decimal_places=2)
+    link    = models.CharField(max_length=255, blank=True) #optional
+
+    characteristics = models.ManyToManyField('Characteristic')
+    tags = models.ManyToManyField('Tag')
+
+    def __str__(self):
+        return self.title

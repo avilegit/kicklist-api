@@ -72,3 +72,14 @@ class ModelTests(TestCase):
         )
         
         self.assertEqual(str(characteristic), characteristic.name)
+
+    def test_shoes_str(self):
+        """Test the shoes string representation"""
+        shoes = models.Shoes.objects.create(
+            user = sample_user(),
+            title = 'Airmax 90',
+            brand = 'Nike',
+            price = '160'
+        )
+
+        self.assertEqual(str(shoes), shoes.title)
