@@ -1,3 +1,4 @@
+self.assertEqual(shoe.brand, payload['brand'])
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -172,4 +173,48 @@ class PrivateShoesApiTests(TestCase):
         self.assertEqual(characteristics.count(), 2)
         self.assertIn(char1, characteristics)
         self.assertIn(char2, characteristics)
+
+    def test_partial_update_shoe(self):
+        """Test udpating a shoe with PATCH"""
+
+        shoe = sample_shoe(user=self.user)
+        shoe.tags.add(sample_tag(user=self.user))
+        new_tag = sample_tag(user=self.user, name='designer')
+
+        payload = {
+            'title' : 'Skechers 500',
+            'tags'  : [new_tag.id],
+        }
+
+        url = detail_url(shoe.id)
+        self.client.patch(url, payload)
+
+        shoe.refresh_from_db()
+        self.assertEqual(shoe.title, payload['title'])
+        tags = shoe.tags.all()
+        self.assertEqual(len(tags), 1)
+        self.assertIn(new_tag, tags)
+
+    def test_full_update_recipe(self):
+        """test updating a recipe with PUT"""
+
+        shoe = sample_shoe(user=self.user)
+        shoe.tags.add(sample_tag(user=self.user))
+
+        payload = {
+            'title' : 'LunarEpics',
+            'brand' : 'Nike',
+            'price' : 130
+        }
+
+        url = detail_url(shoe.id)
+        self.client.put(url, payload)
+
+        shoe.refresh_from_db()
+        self.assertEqual(shoe.title, payload['title'])
+        self.assertEqual(shoe.brand, payload['brand'])
+        self.assertEqual(shoe.price, payload['price'])
+        tags = shoe.tags.all()
+        self.assertEqual(len(tags), 0)
+
 
