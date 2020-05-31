@@ -44,3 +44,13 @@ class ShoeDetailSerializer(ShoeSerializer):
     
     characteristics = CharacteristicsSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+
+class ShoeImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to shoes"""
+
+    class Meta:
+        model = Shoes
+        fields = ('id', 'image')
+        read_only_fields = ('id',)
+
+    

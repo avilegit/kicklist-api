@@ -1,3 +1,8 @@
+../shoes/views.py import tempfile
+import os
+
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -13,6 +18,11 @@ SHOES_URL = reverse('shoes:shoes-list')
 
 # api/shoe/shoes
 # api/shoe/shoes/id create this dynamically
+
+def image_upload_url(shoe_id):
+    """Return URL for shoe image upload"""
+
+    return reverse('shoes:shoes-upload-image', args=[shoe_id])
 
 def detail_url(shoe_id):
     """return shoe detail URL"""
@@ -217,4 +227,48 @@ class PrivateShoesApiTests(TestCase):
         self.assertEqual(len(tags), 0)
         self.assertEqual(shoe.brand, payload['brand'])
 
+class ShoeImageUploadTests(TestCase):
 
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'user@testdomain.com',
+            'testpass'
+        )
+        self.client.force_authenticate(self.user)
+        self.shoe = sample_shoe(user=self.user)
+
+    def tearDown(self):
+        self.shoe.image.delete()
+
+    def test_upload_image_to_shoe(self):
+        """Test uploading an image to shoe"""
+
+        url = image_upload_url(self.shoe.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            img = Image.new('RGB', (10,10))
+            img.save(ntf, format='JPEG')
+            ntf.seek(0)
+
+            res = self.client.post(
+                url, 
+                {'image' : ntf}, 
+                format='multipart'
+            )
+
+        self.shoe.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.shoe.image.path))
+
+    def test_upload_invalid_image(self):
+        """Test uploading an invalid iamge"""
+
+        url = image_upload_url(self.shoe.id)
+        res = self.client.post(
+            url,
+            {'image' : 'notimage'},
+            formats='multipart'
+        )
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
