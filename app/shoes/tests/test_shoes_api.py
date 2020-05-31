@@ -1,4 +1,3 @@
-self.assertEqual(shoe.brand, payload['brand'])
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -216,5 +215,6 @@ class PrivateShoesApiTests(TestCase):
         self.assertEqual(shoe.price, payload['price'])
         tags = shoe.tags.all()
         self.assertEqual(len(tags), 0)
+        self.assertEqual(shoe.brand, payload['brand'])
 
 
