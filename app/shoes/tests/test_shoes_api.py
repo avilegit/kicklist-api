@@ -1,4 +1,4 @@
-../shoes/views.py import tempfile
+import tempfile
 import os
 
 from PIL import Image
@@ -262,7 +262,7 @@ class ShoeImageUploadTests(TestCase):
         self.assertTrue(os.path.exists(self.shoe.image.path))
 
     def test_upload_invalid_image(self):
-        """Test uploading an invalid iamge"""
+        """Test uploading an invalid image"""
 
         url = image_upload_url(self.shoe.id)
         res = self.client.post(
@@ -272,3 +272,55 @@ class ShoeImageUploadTests(TestCase):
         )
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_filter_shoes_by_tags(self):
+        """Test returning shoes with specific tags"""
+
+        shoe1 = sample_shoe(user=self.user, title='airforce 1')
+        shoe2 = sample_shoe(user=self.user, title='yeezy quantum')
+        tag1 = sample_tag(user=self.user, name= 'lowtops')
+        tag2 = sample_tag(user=self.user, name= 'basketball')
+
+        shoe1.tags.add(tag1)
+        shoe2.tags.add(tag2)
+        shoe3 = sample_shoe(user=self.user, title='jordan 1')
+
+        res = self.client.get(
+            SHOES_URL,
+            {'tags': f'{tag1.id},{tag2.id}'}
+        )
+
+        serializer1 = ShoeSerializer(shoe1)
+        serializer2 = ShoeSerializer(shoe2)
+        serializer3 = ShoeSerializer(shoe3)
+
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
+
+    def test_filter_shoes_by_characteristics(self):
+        """Test returning shoes with specific characteristics"""
+
+        shoe1 = sample_shoe(user=self.user, title="NMD R1")
+        shoe2 = sample_shoe(user=self.user, title="Chuck Taylor")
+
+        characteristic1 = sample_characteristic(user=self.user, name = 'boost')
+        characteristic2 = sample_characteristic(user=self.user, name = 'canvas')
+
+        shoe1.characteristics.add(characteristic1)
+        shoe2.characteristics.add(characteristic2)
+
+        shoe3 = sample_shoe(user=self.user, title='jordan 4')
+
+        res = self.client.get(
+                    SHOES_URL,
+                    {'characteristics': f'{characteristic1.id},{characteristic2.id}'}
+                )
+
+        serializer1 = ShoeSerializer(shoe1)
+        serializer2 = ShoeSerializer(shoe2)
+        serializer3 = ShoeSerializer(shoe3)
+
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)

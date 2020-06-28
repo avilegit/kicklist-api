@@ -49,7 +49,7 @@ class ShoeImageSerializer(serializers.ModelSerializer):
     """Serializer for uploading images to shoes"""
 
     class Meta:
-        model = Shoes
+        model = Shoes 
         fields = ('id', 'image')
         read_only_fields = ('id',)
 
