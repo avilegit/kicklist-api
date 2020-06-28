@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Tag, Shoe
+from core.models import Tag, Shoes
 from core.models import Characteristic
 
 from shoes.serializers import TagSerializer
@@ -89,7 +89,7 @@ class PrivateTagsApiTests(TestCase):
         tag1 = Tag.objects.create(user=self.user, name='Suede')
         tag2 = Tag.objects.create(user=self.user, name='Designer')
 
-        shoe = Shoe.objects.create(
+        shoe = Shoes.objects.create(
             title = 'Chuck Taylor All-Star',
             price = 60,
             brand = "Converse",
@@ -106,3 +106,29 @@ class PrivateTagsApiTests(TestCase):
         self.assertIn(serializer1.data, res.data)
         self.assertNotIn(serializer2.data, res.data)
 
+    def test_retrieve_assigned_unique(self):
+        """Test filtering tags by assigned returns unique items"""
+
+        tag = Tag.objects.create(user=self.user, name='streetwear')
+        Tag.objects.create(user=self.user, name='basketball')
+
+        shoe1 = Shoes.objects.create(
+            title = 'Air Huarache',
+            brand = 'Nike',
+            price = 160,
+            user = self.user
+        )
+
+        shoe1.tags.add(tag)
+
+        shoe2 = Shoes.objects.create(
+            title = 'Roche 1',
+            brand = 'Nike',
+            price = 140,
+            user = self.user
+        )
+        
+        shoe2.tags.add(tag)
+
+        res = self.client.get(TAGS_URL, {'assigned_only' : 1})
+        self.assertEqual(len(res.data), 1)

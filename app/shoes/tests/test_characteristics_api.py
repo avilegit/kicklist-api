@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Characteristic
+from core.models import Characteristic, Shoes
 
 from shoes.serializers import CharacteristicsSerializer
 
@@ -84,3 +84,61 @@ class PrivateCharacteristicsApiTests(TestCase):
         payload = {'name' : ''}
         res = self.client.post(CHARACTERISTICS_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_characteristics_assigned_to_shoes(self):
+        """Test filtering characteristics by those assigned to shoes"""
+
+        characteristic1 = Characteristic.objects.create(
+            user=self.user,
+            name='red'
+        )
+
+        characteristic2 = Characteristic.objects.create(
+            user=self.user,
+            name='blue'
+        )
+
+        shoe = Shoes.objects.create(
+            title= 'Red Octobers',
+            brand='Adidas',
+            price=300,
+            user=self.user
+        )
+
+        shoe.characteristics.add(characteristic1)
+
+        res = self.client.get(CHARACTERISTICS_URL, {'assigned_only' : 1})
+
+        serializer1 = CharacteristicsSerializer(characteristic1)
+        serializer2 = CharacteristicsSerializer(characteristic2)
+
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
+
+    def test_retrieve_characteristic_assigned_unique(self):
+        """Test filtering charactersitcs by assigned returns unique items"""
+
+        characteristic = Characteristic.objects.create(user=self.user, name='gum bottoms')
+        Characteristic.objects.create(user=self.user, name = 'flat bottom')
+
+        shoe1 = Shoes.objects.create(
+            title = 'nmd R1',
+            brand = 'Adidas',
+            price = 180,
+            user = self.user
+        )
+
+        shoe1.characteristics.add(characteristic)
+        
+        shoe2 = Shoes.objects.create(
+            title = 'All Star',
+            brand = 'Adidas',
+            price = 120,
+            user = self.user
+        )
+
+        shoe2.characteristics.add(characteristic)
+
+        res = self.client.get(CHARACTERISTICS_URL, {'assigned_only' : 1})
+
+        self.assertEqual(len(res.data), 1)
